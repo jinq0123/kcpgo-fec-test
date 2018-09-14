@@ -73,16 +73,14 @@ func (e *EchoTester) Run() {
 
 // tickMs ticks every ms.
 func (e *EchoTester) tickMs() {
-	current := iclock()
 	e.kcpClt.Update()
 	e.kcpSvr.Update()
 
 	// 每隔 20ms，kcp1发送数据
-	e.tryToPing(current)
-
+	e.tryToPing()
 	e.recvFromVNet()
 	e.echoOnServerSide()
-	e.recvOnClientSide(current)
+	e.recvOnClientSide()
 }
 
 func (e *EchoTester) sendC2S(buf []byte, size int) {
@@ -93,7 +91,8 @@ func (e *EchoTester) sendS2C(buf []byte, size int) {
 	e.vnet.send(1, buf, size)
 }
 
-func (e *EchoTester) tryToPing(current MsClock) {
+func (e *EchoTester) tryToPing() {
+	current := iclock()
 	for ; current >= e.nextPingTime; e.nextPingTime += 20 {
 		buf := new(bytes.Buffer)
 		binary.Write(buf, binary.LittleEndian, uint32(e.pingIndex))
@@ -143,7 +142,8 @@ func (e *EchoTester) echoOnServerSide() {
 	}
 }
 
-func (e *EchoTester) recvOnClientSide(current MsClock) {
+func (e *EchoTester) recvOnClientSide() {
+	current := iclock()
 	// kcpClt收到Server的回射数据
 	for {
 		hr := int32(e.kcpClt.Recv(e.buffer[:10]))
