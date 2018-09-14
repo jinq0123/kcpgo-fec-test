@@ -19,7 +19,7 @@ type LatencySimulator struct {
 // lostrate: 往返一周丢包率的百分比，默认 10%
 // rttmin：rtt最小值，默认 60
 // rttmax：rtt最大值，默认 125
-func NewLatencySimulator(lostrate, rttmin, rttmax, nmax int) *LatencySimulator {
+func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 	p := &LatencySimulator{}
 
 	p.r12 = rand.New(rand.NewSource(9))
