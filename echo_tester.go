@@ -12,6 +12,14 @@ import (
 type EchoTester struct {
 	mode Mode
 
+	// KCP ARQ protocol
+	kcpC2s *kcp.KCP // Client -> Server
+	kcpS2c *kcp.KCP // Server -> Client
+
+	// FEC codec
+	fecDecoder *fecDecoder
+	fecEncoder *fecEncoder
+
 	// 模拟网络
 	vnet *LatencySimulator
 }
