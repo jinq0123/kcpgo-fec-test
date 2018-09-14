@@ -54,17 +54,17 @@ func (e *EchoTester) tickMs() {
 }
 
 func (e *EchoTester) sendC2S(buf []byte, size int) {
-	e.vnet.send(0, buf, size)
+	e.vnet.SendC2S(buf[:size])
 }
 
 func (e *EchoTester) sendS2C(buf []byte, size int) {
-	e.vnet.send(1, buf, size)
+	e.vnet.SendS2C(buf[:size])
 }
 
 func (e *EchoTester) recvFromVNet() {
 	// 处理虚拟网络：检测是否有udp包从p1->p2
 	for {
-		hr := e.vnet.recv(1, e.buffer, 2000)
+		hr := e.vnet.RecvOnSvrSide(e.buffer)
 		if hr < 0 {
 			break
 		}
@@ -74,7 +74,7 @@ func (e *EchoTester) recvFromVNet() {
 
 	// 处理虚拟网络：检测是否有udp包从p2->p1
 	for {
-		hr := e.vnet.recv(0, e.buffer, 2000)
+		hr := e.vnet.RecvOnCltSide(e.buffer)
 		if hr < 0 {
 			break
 		}

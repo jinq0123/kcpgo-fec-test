@@ -28,17 +28,18 @@ func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 	return p
 }
 
+func (p *LatencySimulator) SendC2S(data []byte) {
+	p.send(0, data, len(data))
+}
+
+func (p *LatencySimulator) SendS2C(data []byte) {
+	p.send(1, data, len(data))
+}
+
 // 发送数据
 // peer - 端点0/1，从0发送，从1接收；从1发送从0接收
 func (p *LatencySimulator) send(peer int, data []byte, size int) int {
-	rnd := 0
-	if peer == 0 {
-		rnd = rand.Intn(100)
-	} else {
-		rnd = rand.Intn(100)
-	}
-	//println("!!!!!!!!!!!!!!!!!!!!", rnd, p.lostrate, peer)
-	if rnd < p.lostrate {
+	if rand.Intn(100) < p.lostrate {
 		return 0
 	}
 	pkt := NewDelayPacket(data[:size])
@@ -54,6 +55,14 @@ func (p *LatencySimulator) send(peer int, data []byte, size int) int {
 		p.p21.PushBack(pkt)
 	}
 	return 1
+}
+
+func (p *LatencySimulator) RecvOnCltSide(data []byte) int32 {
+	return p.recv(0, data, len(data))
+}
+
+func (p *LatencySimulator) RecvOnSvrSide(data []byte) int32 {
+	return p.recv(1, data, len(data))
 }
 
 // 接收数据
