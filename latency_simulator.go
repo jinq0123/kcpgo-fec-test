@@ -6,7 +6,6 @@ import (
 )
 
 type LatencySimulator struct {
-	current                  MsClock // current time in ms
 	lostrate, rttmin, rttmax int
 	p12                      *list.List // DelayTunnel
 	p21                      *list.List // DelayTunnel
@@ -20,7 +19,6 @@ func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 
 	p.p12 = list.New()
 	p.p21 = list.New()
-	p.current = iclock()
 	p.lostrate = lostrate / 2 // 上面数据是往返丢包率，单程除以2
 	p.rttmin = rttmin / 2
 	p.rttmax = rttmax / 2
@@ -43,12 +41,11 @@ func (p *LatencySimulator) send(peer int, data []byte, size int) int {
 		return 0
 	}
 	pkt := NewDelayPacket(data[:size])
-	p.current = iclock()
 	delay := p.rttmin
 	if p.rttmax > p.rttmin {
 		delay += rand.Int() % (p.rttmax - p.rttmin)
 	}
-	pkt.ts = p.current + MsClock(delay)
+	pkt.ts = iclock() + MsClock(delay)
 	if peer == 0 {
 		p.p12.PushBack(pkt)
 	} else {
@@ -80,8 +77,7 @@ func (p *LatencySimulator) recv(peer int, data []byte, maxsize int) int32 {
 		}
 	}
 	pkt := it.Value.(*DelayPacket)
-	p.current = iclock()
-	if p.current < pkt.ts {
+	if iclock() < pkt.ts {
 		return -2
 	}
 	if maxsize < pkt.size() {
