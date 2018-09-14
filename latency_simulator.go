@@ -6,9 +6,10 @@ import (
 )
 
 type LatencySimulator struct {
-	lostrate, rttmin, rttmax int
-	c2s                      *list.List // DelayTunnel
-	s2c                      *list.List // DelayTunnel
+	lostrate       int
+	rttmin, rttmax int
+	c2s            *list.List // DelayTunnel
+	s2c            *list.List // DelayTunnel
 }
 
 // lostrate: 单向丢包率，百分比
@@ -31,11 +32,13 @@ func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 }
 
 func (p *LatencySimulator) SendC2S(data []byte) {
-	p.send(true, data)
+	c2s := true
+	p.send(c2s, data)
 }
 
 func (p *LatencySimulator) SendS2C(data []byte) {
-	p.send(false, data)
+	c2s := true
+	p.send(!c2s, data)
 }
 
 // 发送数据
@@ -53,43 +56,39 @@ func (p *LatencySimulator) send(c2s bool, data []byte) {
 	}
 }
 
-func (p *LatencySimulator) RecvOnCltSide(data []byte) int32 {
-	return p.recv(0, data, len(data))
+func (p *LatencySimulator) RecvOnCltSide(data []byte) int {
+	cltSide := true
+	return p.recv(cltSide, data)
 }
 
-func (p *LatencySimulator) RecvOnSvrSide(data []byte) int32 {
-	return p.recv(1, data, len(data))
+func (p *LatencySimulator) RecvOnSvrSide(data []byte) int {
+	cltSide := true
+	return p.recv(!cltSide, data)
 }
 
 // 接收数据
-func (p *LatencySimulator) recv(peer int, data []byte, maxsize int) int32 {
+func (p *LatencySimulator) recv(isCltSide bool, data []byte) int {
 	var it *list.Element
-	if peer == 0 {
-		it = p.s2c.Front()
-		if p.s2c.Len() == 0 {
-			return -1
-		}
-	} else {
-		it = p.c2s.Front()
-		if p.c2s.Len() == 0 {
-			return -1
-		}
+	lst := p.c2s
+	if isCltSide {
+		lst = p.s2c // receive on the client side
 	}
+	if lst.Len() == 0 {
+		return -1
+	}
+
+	it = lst.Front()
 	pkt := it.Value.(*DelayPacket)
 	if iclock() < pkt.ts {
 		return -2
 	}
-	if maxsize < pkt.size() {
+	if len(data) < pkt.size() {
 		return -3
 	}
-	if peer == 0 {
-		p.s2c.Remove(it)
-	} else {
-		p.c2s.Remove(it)
-	}
-	maxsize = pkt.size()
-	copy(data, pkt.data[:maxsize])
-	return int32(maxsize)
+
+	lst.Remove(it)
+	copy(data, pkt.data)
+	return len(pkt.data)
 }
 
 func (p *LatencySimulator) getRandDelay() MsClock {
