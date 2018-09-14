@@ -5,13 +5,11 @@ import (
 	"math/rand"
 )
 
-type DelayTunnel struct{ *list.List }
-
 type LatencySimulator struct {
-	current                  int32
+	current                  int32 // current time in ms
 	lostrate, rttmin, rttmax int
-	p12                      DelayTunnel
-	p21                      DelayTunnel
+	p12                      *list.List // DelayTunnel
+	p21                      *list.List // DelayTunnel
 }
 
 // lostrate: 往返一周丢包率的百分比，默认 10%
@@ -20,8 +18,8 @@ type LatencySimulator struct {
 func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 	p := &LatencySimulator{}
 
-	p.p12 = DelayTunnel{list.New()}
-	p.p21 = DelayTunnel{list.New()}
+	p.p12 = list.New()
+	p.p21 = list.New()
 	p.current = iclock()
 	p.lostrate = lostrate / 2 // 上面数据是往返丢包率，单程除以2
 	p.rttmin = rttmin / 2
