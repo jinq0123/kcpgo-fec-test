@@ -7,51 +7,50 @@ import (
 
 type LatencySimulator struct {
 	lostrate, rttmin, rttmax int
-	p12                      *list.List // DelayTunnel
-	p21                      *list.List // DelayTunnel
+	c2s                      *list.List // DelayTunnel
+	s2c                      *list.List // DelayTunnel
 }
 
-// lostrate: 往返一周丢包率的百分比，默认 10%
-// rttmin：rtt最小值，默认 60
-// rttmax：rtt最大值，默认 125
+// lostrate: 单向丢包率，百分比
+// rttmin：rtt最小值
+// rttmax：rtt最大值
 func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 	p := &LatencySimulator{}
 
-	p.p12 = list.New()
-	p.p21 = list.New()
-	p.lostrate = lostrate / 2 // 上面数据是往返丢包率，单程除以2
-	p.rttmin = rttmin / 2
-	p.rttmax = rttmax / 2
+	p.c2s = list.New()
+	p.s2c = list.New()
+
+	p.lostrate = lostrate
+	if rttmin > rttmax {
+		rttmin, rttmax = rttmax, rttmin
+	}
+	p.rttmin = rttmin
+	p.rttmax = rttmax
 
 	return p
 }
 
 func (p *LatencySimulator) SendC2S(data []byte) {
-	p.send(0, data, len(data))
+	p.send(true, data)
 }
 
 func (p *LatencySimulator) SendS2C(data []byte) {
-	p.send(1, data, len(data))
+	p.send(false, data)
 }
 
 // 发送数据
-// peer - 端点0/1，从0发送，从1接收；从1发送从0接收
-func (p *LatencySimulator) send(peer int, data []byte, size int) int {
+func (p *LatencySimulator) send(c2s bool, data []byte) {
 	if rand.Intn(100) < p.lostrate {
-		return 0
+		return // packet lost
 	}
-	pkt := NewDelayPacket(data[:size])
-	delay := p.rttmin
-	if p.rttmax > p.rttmin {
-		delay += rand.Int() % (p.rttmax - p.rttmin)
-	}
-	pkt.ts = iclock() + MsClock(delay)
-	if peer == 0 {
-		p.p12.PushBack(pkt)
+
+	pkt := NewDelayPacket(data)
+	pkt.ts = iclock() + p.getRandDelay()
+	if c2s {
+		p.c2s.PushBack(pkt)
 	} else {
-		p.p21.PushBack(pkt)
+		p.s2c.PushBack(pkt)
 	}
-	return 1
 }
 
 func (p *LatencySimulator) RecvOnCltSide(data []byte) int32 {
@@ -66,13 +65,13 @@ func (p *LatencySimulator) RecvOnSvrSide(data []byte) int32 {
 func (p *LatencySimulator) recv(peer int, data []byte, maxsize int) int32 {
 	var it *list.Element
 	if peer == 0 {
-		it = p.p21.Front()
-		if p.p21.Len() == 0 {
+		it = p.s2c.Front()
+		if p.s2c.Len() == 0 {
 			return -1
 		}
 	} else {
-		it = p.p12.Front()
-		if p.p12.Len() == 0 {
+		it = p.c2s.Front()
+		if p.c2s.Len() == 0 {
 			return -1
 		}
 	}
@@ -84,11 +83,19 @@ func (p *LatencySimulator) recv(peer int, data []byte, maxsize int) int32 {
 		return -3
 	}
 	if peer == 0 {
-		p.p21.Remove(it)
+		p.s2c.Remove(it)
 	} else {
-		p.p12.Remove(it)
+		p.c2s.Remove(it)
 	}
 	maxsize = pkt.size()
 	copy(data, pkt.data[:maxsize])
 	return int32(maxsize)
+}
+
+func (p *LatencySimulator) getRandDelay() MsClock {
+	delay := p.rttmin
+	if p.rttmax != p.rttmin {
+		delay += rand.Int() % (p.rttmax - p.rttmin)
+	}
+	return MsClock(delay / 2)
 }
