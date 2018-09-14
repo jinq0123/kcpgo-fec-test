@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 var modes = []Mode{
 	Mode{"default", 0, 10, 0, 0},
 	Mode{"normal", 0, 10, 0, 1},
@@ -7,5 +9,14 @@ var modes = []Mode{
 }
 
 func main() {
-
+	var wg sync.WaitGroup
+	for _, mode := range modes {
+		wg.Add(1)
+		go func(mode Mode) {
+			defer wg.Done()
+			et := NewEchoTester(mode)
+			et.Run()
+		}(mode)
+	}
+	wg.Wait()
 }

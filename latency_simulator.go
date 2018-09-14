@@ -12,8 +12,6 @@ type LatencySimulator struct {
 	lostrate, rttmin, rttmax int
 	p12                      DelayTunnel
 	p21                      DelayTunnel
-	r12                      *rand.Rand
-	r21                      *rand.Rand
 }
 
 // lostrate: 往返一周丢包率的百分比，默认 10%
@@ -22,8 +20,6 @@ type LatencySimulator struct {
 func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 	p := &LatencySimulator{}
 
-	p.r12 = rand.New(rand.NewSource(9))
-	p.r21 = rand.New(rand.NewSource(99))
 	p.p12 = DelayTunnel{list.New()}
 	p.p21 = DelayTunnel{list.New()}
 	p.current = iclock()
@@ -39,9 +35,9 @@ func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
 func (p *LatencySimulator) send(peer int, data []byte, size int) int {
 	rnd := 0
 	if peer == 0 {
-		rnd = p.r12.Intn(100)
+		rnd = rand.Intn(100)
 	} else {
-		rnd = p.r21.Intn(100)
+		rnd = rand.Intn(100)
 	}
 	//println("!!!!!!!!!!!!!!!!!!!!", rnd, p.lostrate, peer)
 	if rnd < p.lostrate {
