@@ -6,7 +6,7 @@ import (
 )
 
 type LatencySimulator struct {
-	current                  int32 // current time in ms
+	current                  MsClock // current time in ms
 	lostrate, rttmin, rttmax int
 	p12                      *list.List // DelayTunnel
 	p21                      *list.List // DelayTunnel
@@ -47,7 +47,7 @@ func (p *LatencySimulator) send(peer int, data []byte, size int) int {
 	if p.rttmax > p.rttmin {
 		delay += rand.Int() % (p.rttmax - p.rttmin)
 	}
-	pkt.ts = p.current + int32(delay)
+	pkt.ts = p.current + MsClock(delay)
 	if peer == 0 {
 		p.p12.PushBack(pkt)
 	} else {

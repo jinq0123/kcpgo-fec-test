@@ -2,6 +2,8 @@ package main
 
 import "time"
 
-func iclock() int32 {
-	return int32((time.Now().UnixNano() / 1000000) & 0xffffffff)
+type MsClock uint32
+
+func iclock() MsClock {
+	return MsClock((time.Now().UnixNano() / 1000000) & 0xffffffff)
 }

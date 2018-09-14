@@ -2,7 +2,7 @@ package main
 
 type DelayPacket struct {
 	data []byte
-	ts   int32 // timestamp in ms
+	ts   MsClock // timestamp in ms
 }
 
 func NewDelayPacket(src []byte) *DelayPacket {
