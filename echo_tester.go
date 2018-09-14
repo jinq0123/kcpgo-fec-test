@@ -45,32 +45,29 @@ func NewEchoTester(mode Mode) *EchoTester {
 	e.kcpClt = kcp.NewKCP(0x11223344, e.sendC2S)
 	e.kcpSvr = kcp.NewKCP(0x11223344, e.sendS2C)
 
-	return e
-}
-
-func (e *EchoTester) Run() {
-	current := iclock()
-	e.nextPingTime = current + 20
-
 	// 配置窗口大小：平均延迟200ms，每20ms发送一个包，
 	// 而考虑到丢包重发，设置最大收发窗口为128
 	e.kcpClt.WndSize(1280, 1280)
 	e.kcpSvr.WndSize(1280, 1280)
 	// nodelay, interval, resend, nc int
-	mode := e.mode
 	e.kcpClt.NoDelay(mode.nodelay, mode.interval, mode.resend, mode.nc)
 	e.kcpSvr.NoDelay(mode.nodelay, mode.interval, mode.resend, mode.nc)
 
-	ts1 := iclock()
+	return e
+}
 
+func (e *EchoTester) Run() {
+	start := iclock()
+	e.nextPingTime = start
 	for e.pingCount < 500 {
 		time.Sleep(1 * time.Millisecond)
 		e.tickMs()
 	}
 
-	ts1 = iclock() - ts1
+	total := iclock() - start
+	mode := e.mode
 	fmt.Printf("NoDelay(%d,%d,%d,%d) mode result (%dms):\n",
-		mode.nodelay, mode.interval, mode.resend, mode.nc, ts1)
+		mode.nodelay, mode.interval, mode.resend, mode.nc, total)
 	fmt.Printf("avgrtt=%d e.maxrtt=%d\n", int(e.sumrtt/uint32(e.pingCount)), e.maxrtt)
 }
 
