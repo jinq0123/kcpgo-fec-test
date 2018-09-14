@@ -16,19 +16,17 @@ type LatencySimulator struct {
 // rttmin：rtt最小值
 // rttmax：rtt最大值
 func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
-	p := &LatencySimulator{}
-
-	p.c2s = list.New()
-	p.s2c = list.New()
-
-	p.lostrate = lostrate
 	if rttmin > rttmax {
 		rttmin, rttmax = rttmax, rttmin
 	}
-	p.rttmin = rttmin
-	p.rttmax = rttmax
+	return &LatencySimulator{
+		c2s: list.New(),
+		s2c: list.New(),
 
-	return p
+		lostrate: lostrate,
+		rttmin:   rttmin,
+		rttmax:   rttmax,
+	}
 }
 
 func (p *LatencySimulator) SendC2S(data []byte) {
