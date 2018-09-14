@@ -78,6 +78,22 @@ func (e *EchoTester) tickMs() {
 	e.kcpSvr.Update()
 
 	// 每隔 20ms，kcp1发送数据
+	e.tryToPing(current)
+
+	e.recvFromVNet()
+	e.echoOnServerSide()
+	e.recvOnClientSide(current)
+}
+
+func (e *EchoTester) sendC2S(buf []byte, size int) {
+	e.vnet.send(0, buf, size)
+}
+
+func (e *EchoTester) sendS2C(buf []byte, size int) {
+	e.vnet.send(1, buf, size)
+}
+
+func (e *EchoTester) tryToPing(current MsClock) {
 	for ; current >= e.nextPingTime; e.nextPingTime += 20 {
 		buf := new(bytes.Buffer)
 		binary.Write(buf, binary.LittleEndian, uint32(e.pingIndex))
@@ -85,9 +101,10 @@ func (e *EchoTester) tickMs() {
 		binary.Write(buf, binary.LittleEndian, uint32(current))
 		// 发送上层协议包
 		e.kcpClt.Send(buf.Bytes())
-		//println("now", iclock())
 	}
+}
 
+func (e *EchoTester) recvFromVNet() {
 	// 处理虚拟网络：检测是否有udp包从p1->p2
 	for {
 		hr := e.vnet.recv(1, e.buffer, 2000)
@@ -108,8 +125,10 @@ func (e *EchoTester) tickMs() {
 		e.kcpClt.Input(e.buffer[:hr], true, false)
 		//println("@@@@", hr, r)
 	}
+}
 
-	// kcp2接收到任何包都返回回去
+func (e *EchoTester) echoOnServerSide() {
+	// kcpSvr 接收到任何包都返回回去
 	for {
 		hr := int32(e.kcpSvr.Recv(e.buffer[:10]))
 		// 没有收到包就退出
@@ -122,8 +141,10 @@ func (e *EchoTester) tickMs() {
 		binary.Read(buf, binary.LittleEndian, &sn)
 		e.kcpSvr.Send(e.buffer[:hr])
 	}
+}
 
-	// kcp1收到kcp2的回射数据
+func (e *EchoTester) recvOnClientSide(current MsClock) {
+	// kcpClt收到Server的回射数据
 	for {
 		hr := int32(e.kcpClt.Recv(e.buffer[:10]))
 		buf := bytes.NewReader(e.buffer)
@@ -151,12 +172,4 @@ func (e *EchoTester) tickMs() {
 
 		//println("[RECV] mode=", mode, " sn=", sn, " rtt=", rtt)
 	}
-}
-
-func (e *EchoTester) sendC2S(buf []byte, size int) {
-	e.vnet.send(0, buf, size)
-}
-
-func (e *EchoTester) sendS2C(buf []byte, size int) {
-	e.vnet.send(1, buf, size)
 }
