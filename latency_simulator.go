@@ -6,16 +6,17 @@ import (
 )
 
 type LatencySimulator struct {
-	lostrate       int
-	rttmin, rttmax int
-	c2s            *list.List // DelayTunnel
-	s2c            *list.List // DelayTunnel
+	lostrate int
+	rttmin   MsClock
+	rttmax   MsClock
+	c2s      *list.List // DelayTunnel
+	s2c      *list.List // DelayTunnel
 }
 
 // lostrate: 单向丢包率，百分比
 // rttmin：rtt最小值
 // rttmax：rtt最大值
-func NewLatencySimulator(lostrate, rttmin, rttmax int) *LatencySimulator {
+func NewLatencySimulator(lostrate int, rttmin, rttmax MsClock) *LatencySimulator {
 	if rttmin > rttmax {
 		rttmin, rttmax = rttmax, rttmin
 	}
@@ -92,7 +93,7 @@ func (p *LatencySimulator) recv(isCltSide bool, data []byte) int {
 func (p *LatencySimulator) getRandDelay() MsClock {
 	delay := p.rttmin
 	if p.rttmax != p.rttmin {
-		delay += rand.Int() % (p.rttmax - p.rttmin)
+		delay += MsClock(rand.Int()) % (p.rttmax - p.rttmin)
 	}
-	return MsClock(delay / 2)
+	return delay / 2
 }
