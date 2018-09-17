@@ -58,7 +58,7 @@ func (e *EchoClient) tryToPing() {
 func (e *EchoClient) recvPong() {
 	current := iclock()
 	// kcpClt收到Server的回射数据
-	for {
+	for e.pongCount < maxCount {
 		hr := int32(e.kcp.Recv(e.buffer[:10]))
 		buf := bytes.NewReader(e.buffer)
 		// 没有收到包就退出
@@ -90,9 +90,10 @@ func (e *EchoClient) recvPong() {
 
 // SaveRtt save aRtt[] to file.
 func (e *EchoClient) SaveRtt() {
-	saveToFile(e.aRtt[:], outputDir+"/"+e.modeName+".txt")
+	saveToFile(e.aRtt, outputDir+"/"+e.modeName+".txt")
+
 	a := make([]int, maxCount)
-	copy(a, e.aRtt[:])
+	copy(a, e.aRtt)
 	sort.Ints(a)
 	saveToFile(a, outputDir+"/"+e.modeName+"_sorted.txt")
 }
@@ -104,7 +105,7 @@ func saveToFile(a []int, fileName string) {
 	}
 	defer file.Close()
 
-	for i, v := range a {
-		file.WriteString(fmt.Sprintf("%d %d\n", i, v))
+	for _, v := range a {
+		file.WriteString(fmt.Sprintf("%d\n", v))
 	}
 }
