@@ -1,6 +1,9 @@
 package main
 
-import "sync"
+import (
+	"os"
+	"sync"
+)
 
 var modes = []Mode{
 	Mode{"default", 0, 10, 0, 0},
@@ -9,6 +12,7 @@ var modes = []Mode{
 }
 
 func main() {
+	os.Mkdir(outputDir, 0777)
 	var wg sync.WaitGroup
 	for _, mode := range modes {
 		wg.Add(1)

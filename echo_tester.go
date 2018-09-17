@@ -34,7 +34,7 @@ func NewEchoTester(mode Mode) *EchoTester {
 
 func (e *EchoTester) Run() {
 	start := iclock()
-	for e.clt.pingCount < 500 {
+	for e.clt.pongCount < maxCount {
 		time.Sleep(1 * time.Millisecond)
 		e.tickMs()
 	}
@@ -43,7 +43,8 @@ func (e *EchoTester) Run() {
 	mode := e.mode
 	fmt.Printf("NoDelay(%d,%d,%d,%d) mode result (%dms):\n",
 		mode.nodelay, mode.interval, mode.resend, mode.nc, total)
-	fmt.Printf("avgrtt=%d e.maxrtt=%d\n", int(e.clt.sumrtt/uint32(e.clt.pingCount)), e.clt.maxrtt)
+	fmt.Printf("avgrtt=%d e.maxrtt=%d\n", int(e.clt.sumrtt/uint32(e.clt.pongCount)), e.clt.maxrtt)
+	e.clt.SaveRtt()
 }
 
 // tickMs ticks every ms.
