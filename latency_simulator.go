@@ -6,17 +6,17 @@ import (
 )
 
 type LatencySimulator struct {
-	lostrate int
+	lossRate float32 // one-way loss rate, [0.0..0.5)
 	rttmin   MsClock
 	rttmax   MsClock
 	c2s      *list.List // DelayTunnel
 	s2c      *list.List // DelayTunnel
 }
 
-// lostrate: 单向丢包率，百分比
+// rtLossRate: round-trip loss rate, 往返一周的丢包率，百分比 0..100
 // rttmin：rtt最小值
 // rttmax：rtt最大值
-func NewLatencySimulator(lostrate int, rttmin, rttmax MsClock) *LatencySimulator {
+func NewLatencySimulator(rtLossRate int, rttmin, rttmax MsClock) *LatencySimulator {
 	if rttmin > rttmax {
 		rttmin, rttmax = rttmax, rttmin
 	}
@@ -24,7 +24,7 @@ func NewLatencySimulator(lostrate int, rttmin, rttmax MsClock) *LatencySimulator
 		c2s: list.New(),
 		s2c: list.New(),
 
-		lostrate: lostrate,
+		lossRate: float32(rtLossRate) / 100.0 / 2.0,
 		rttmin:   rttmin,
 		rttmax:   rttmax,
 	}
@@ -42,7 +42,7 @@ func (p *LatencySimulator) SendS2C(data []byte) {
 
 // 发送数据
 func (p *LatencySimulator) send(c2s bool, data []byte) {
-	if rand.Intn(100) < p.lostrate {
+	if rand.Float32() < p.lossRate {
 		return // packet lost
 	}
 
