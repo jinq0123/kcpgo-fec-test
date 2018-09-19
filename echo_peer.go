@@ -79,7 +79,7 @@ func (e *EchoPeer) output(buf []byte, size int) {
 	}
 
 	// header extended output buffer
-	ext := make([]byte, fecHeaderSizePlus2+len(buf))
+	ext := make([]byte, fecHeaderSizePlus2+size)
 	copy(ext[fecHeaderSizePlus2:], buf)
 
 	// FEC encoding
