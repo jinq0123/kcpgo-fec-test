@@ -40,8 +40,12 @@ func (e *EchoTester) Run() {
 
 	total := iclock() - start
 	mode := e.mode
-	fmt.Printf("NoDelay(%d,%d,%d,%d) mode result (%dms):\n",
-		mode.nodelay, mode.interval, mode.resend, mode.nc, total)
+	var fec string
+	if mode.fec {
+		fec = ",fec"
+	}
+	fmt.Printf("%s mode(%d,%d,%d,%d%s) result (%dms):\n",
+		mode.name, mode.nodelay, mode.interval, mode.resend, mode.nc, fec, total)
 	fmt.Printf("avgrtt=%d e.maxrtt=%d\n", int(e.clt.sumrtt/uint32(e.clt.pongCount)), e.clt.maxrtt)
 	e.clt.SaveRtt()
 }
