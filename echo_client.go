@@ -33,7 +33,7 @@ func NewEchoClient(mode Mode, output OutputCallback) *EchoClient {
 func (e *EchoClient) TickMs() {
 	e.kcp.Update()
 
-	// 每隔 20ms，kcp1发送数据
+	// Ping repeatedly
 	e.tryToPing()
 
 	e.recvPong()

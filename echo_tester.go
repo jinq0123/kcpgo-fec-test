@@ -11,7 +11,7 @@ type EchoTester struct {
 	clt *EchoClient
 	svr *EchoServer
 
-	// 模拟网络
+	// virtual net
 	vnet *LatencySimulator
 
 	buffer []byte
@@ -31,6 +31,7 @@ func NewEchoTester(mode Mode) *EchoTester {
 	return e
 }
 
+// Run sends ping and calculates the round-trip time.
 func (e *EchoTester) Run() {
 	start := iclock()
 	for e.clt.pongCount < maxCount {
@@ -72,7 +73,7 @@ func (e *EchoTester) recvFromVNet() {
 		if hr < 0 {
 			break
 		}
-		// 如果 p2收到udp，则作为下层协议输入到kcp2
+		// Input to server's kcp/fec.
 		e.svr.Input(e.buffer[:hr])
 	}
 
@@ -82,7 +83,7 @@ func (e *EchoTester) recvFromVNet() {
 		if hr < 0 {
 			break
 		}
-		// 如果 p1收到udp，则作为下层协议输入到kcp1
+		// Input to client's kcp/fec.
 		e.clt.Input(e.buffer[:hr])
 	}
 }

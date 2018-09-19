@@ -30,7 +30,7 @@ func NewEchoPeer(mode Mode, output OutputCallback) *EchoPeer {
 	e.kcp = kcp.NewKCP(0x11223344, e.output)
 	// 配置窗口大小：平均延迟200ms，每20ms发送一个包，
 	// 而考虑到丢包重发，设置最大收发窗口为128
-	e.kcp.WndSize(1280, 1280)
+	e.kcp.WndSize(128, 128)
 	// nodelay, interval, resend, nc int
 	e.kcp.NoDelay(mode.nodelay, mode.interval, mode.resend, mode.nc)
 
