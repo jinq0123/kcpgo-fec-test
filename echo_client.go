@@ -45,7 +45,7 @@ func (e *EchoClient) tryToPing() {
 		e.nextPingTime = current
 	}
 
-	for ; current >= e.nextPingTime; e.nextPingTime += 20 {
+	for ; current >= e.nextPingTime; e.nextPingTime += pingIntervalMs {
 		buf := new(bytes.Buffer)
 		binary.Write(buf, binary.LittleEndian, uint32(e.pingIndex))
 		e.pingIndex++
@@ -59,8 +59,9 @@ func (e *EchoClient) recvPong() {
 	current := iclock()
 	// kcpClt收到Server的回射数据
 	for e.pongCount < maxCount {
-		hr := int32(e.kcp.Recv(e.buffer[:10]))
-		buf := bytes.NewReader(e.buffer)
+		buffer := make([]byte, 10)
+		hr := int32(e.kcp.Recv(buffer))
+		buf := bytes.NewReader(buffer)
 		// 没有收到包就退出
 		if hr < 0 {
 			break

@@ -21,8 +21,7 @@ func NewEchoTester(mode Mode) *EchoTester {
 	e := &EchoTester{
 		mode: mode,
 
-		// 创建模拟网络：丢包率10%，Rtt 60ms~125ms
-		vnet: NewLatencySimulator(10, 60, 125),
+		vnet: NewLatencySimulator(),
 
 		buffer: make([]byte, 2000),
 	}

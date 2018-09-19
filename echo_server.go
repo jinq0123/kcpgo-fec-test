@@ -23,15 +23,16 @@ func (e *EchoServer) TickMs() {
 func (e *EchoServer) echo() {
 	// kcpSvr 接收到任何包都返回回去
 	for {
-		hr := int32(e.kcp.Recv(e.buffer[:10]))
+		buffer := make([]byte, 10)
+		hr := int32(e.kcp.Recv(buffer))
 		// 没有收到包就退出
 		if hr < 0 {
 			break
 		}
 		// 如果收到包就回射
-		buf := bytes.NewReader(e.buffer)
+		buf := bytes.NewReader(buffer)
 		var sn uint32
 		binary.Read(buf, binary.LittleEndian, &sn)
-		e.kcp.Send(e.buffer[:hr])
+		e.kcp.Send(buffer[:hr])
 	}
 }

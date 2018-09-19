@@ -7,26 +7,24 @@ import (
 
 type LatencySimulator struct {
 	lossRate float32 // one-way loss rate, [0.0..0.5)
-	rttmin   MsClock
-	rttmax   MsClock
-	c2s      *list.List // DelayTunnel
-	s2c      *list.List // DelayTunnel
+
+	// min/max round-trip time
+	rttMin MsClock
+	rttMax MsClock
+
+	// Delay tunnels
+	c2s *list.List
+	s2c *list.List
 }
 
-// rtLossRate: round-trip loss rate, 往返一周的丢包率，百分比 0..100
-// rttmin：rtt最小值
-// rttmax：rtt最大值
-func NewLatencySimulator(rtLossRate int, rttmin, rttmax MsClock) *LatencySimulator {
-	if rttmin > rttmax {
-		rttmin, rttmax = rttmax, rttmin
-	}
+func NewLatencySimulator() *LatencySimulator {
 	return &LatencySimulator{
 		c2s: list.New(),
 		s2c: list.New(),
 
-		lossRate: float32(rtLossRate) / 100.0 / 2.0,
-		rttmin:   rttmin,
-		rttmax:   rttmax,
+		lossRate: rtLossRate / 100.0 / 2.0,
+		rttMin:   rttMin,
+		rttMax:   rttMax,
 	}
 }
 
@@ -91,9 +89,9 @@ func (p *LatencySimulator) recv(isCltSide bool, data []byte) int {
 }
 
 func (p *LatencySimulator) getRandDelay() MsClock {
-	delay := p.rttmin
-	if p.rttmax != p.rttmin {
-		delay += MsClock(rand.Int()) % (p.rttmax - p.rttmin)
+	delay := p.rttMin
+	if p.rttMax != p.rttMin {
+		delay += MsClock(rand.Int()) % (p.rttMax - p.rttMin)
 	}
 	return delay / 2
 }
