@@ -8,3 +8,7 @@ To plot:
 ```
 gnuplot -p -e "plot 'normal_sorted.txt' with lines, 'normal-fec_sorted.txt' with lines, 'fast_sorted.txt' with lines, 'fast-fec_sorted.txt' with lines"
 ```
+Or:
+```
+kcpgo-fec-test && cd output && gnuplot -p -e "plot 'normal_sorted.txt' with lines, 'normal-fec_sorted.txt' with lines, 'fast_sorted.txt' with lines, 'fast-fec_sorted.txt' with lines"
+```
