@@ -63,24 +63,23 @@ func (e *EchoTester) sendS2C(buf []byte, size int) {
 }
 
 func (e *EchoTester) recvFromVNet() {
-	// 处理虚拟网络：检测是否有udp包从p1->p2
+	// Recv on server side.
 	for {
 		hr := e.vnet.RecvOnSvrSide(e.buffer)
 		if hr < 0 {
 			break
 		}
 		// 如果 p2收到udp，则作为下层协议输入到kcp2
-		e.svr.kcp.Input(e.buffer[:hr], true, false)
+		e.svr.Input(e.buffer[:hr])
 	}
 
-	// 处理虚拟网络：检测是否有udp包从p2->p1
+	// Recv on client side.
 	for {
 		hr := e.vnet.RecvOnCltSide(e.buffer)
 		if hr < 0 {
 			break
 		}
 		// 如果 p1收到udp，则作为下层协议输入到kcp1
-		e.clt.kcp.Input(e.buffer[:hr], true, false)
-		//println("@@@@", hr, r)
+		e.clt.Input(e.buffer[:hr])
 	}
 }

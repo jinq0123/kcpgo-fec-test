@@ -7,4 +7,6 @@ type Mode struct {
 	interval int
 	resend   int
 	nc       int
+
+	fec bool
 }

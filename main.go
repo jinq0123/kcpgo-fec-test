@@ -6,9 +6,11 @@ import (
 )
 
 var modes = []Mode{
-	Mode{"default", 0, 10, 0, 0},
-	Mode{"normal", 0, 10, 0, 1},
-	Mode{"fast", 1, 10, 2, 1},
+	// Mode{"default", 0, 10, 0, 0},
+	Mode{"normal", 0, 10, 0, 1, false},
+	Mode{"fast", 1, 10, 2, 1, false},
+	Mode{"normal-fec", 0, 10, 0, 1, true},
+	Mode{"fast-fec", 1, 10, 2, 1, true},
 }
 
 func main() {

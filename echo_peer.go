@@ -18,6 +18,7 @@ type OutputCallback = func(buf []byte, size int)
 
 func NewEchoPeer(mode Mode, output OutputCallback) *EchoPeer {
 	e := &EchoPeer{
+		fec:    NewFecCodec(),
 		buffer: make([]byte, 2000),
 	}
 
@@ -30,4 +31,9 @@ func NewEchoPeer(mode Mode, output OutputCallback) *EchoPeer {
 	// nodelay, interval, resend, nc int
 	e.kcp.NoDelay(mode.nodelay, mode.interval, mode.resend, mode.nc)
 	return e
+}
+
+// Input input data from net to fec.
+func (e *EchoPeer) Input(buf []byte) {
+
 }
