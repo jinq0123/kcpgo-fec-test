@@ -49,12 +49,12 @@ func (e *EchoPeer) Input(buf []byte) {
 	}
 
 	f := e.fec.dec.decodeBytes(buf)
+	if f.flag != typeData && f.flag != typeFEC {
+		panic("illegal fec flag")
+	}
+
 	if f.flag == typeData {
 		e.kcp.Input(buf[fecHeaderSizePlus2:], true, false)
-		return
-	}
-	if f.flag != typeFEC {
-		return
 	}
 
 	recovers := e.fec.dec.decode(f)
