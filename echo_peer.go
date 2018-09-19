@@ -1,6 +1,10 @@
 package main
 
-import kcp "github.com/xtaci/kcp-go"
+import (
+	"encoding/binary"
+
+	kcp "github.com/xtaci/kcp-go"
+)
 
 // Common part of EchoServer and EchoClient
 type EchoPeer struct {
@@ -18,7 +22,6 @@ type OutputCallback = func(buf []byte, size int)
 
 func NewEchoPeer(mode Mode, output OutputCallback) *EchoPeer {
 	e := &EchoPeer{
-		fec:    NewFecCodec(),
 		buffer: make([]byte, 2000),
 	}
 
@@ -30,10 +33,40 @@ func NewEchoPeer(mode Mode, output OutputCallback) *EchoPeer {
 	e.kcp.WndSize(1280, 1280)
 	// nodelay, interval, resend, nc int
 	e.kcp.NoDelay(mode.nodelay, mode.interval, mode.resend, mode.nc)
+
+	if mode.fec {
+		e.fec = NewFecCodec()
+	}
 	return e
 }
 
 // Input input data from net to fec.
 func (e *EchoPeer) Input(buf []byte) {
+	if e.fec == nil {
+		e.kcp.Input(buf, true, false)
+		return
+	}
 
+	f := e.fec.dec.decodeBytes(buf)
+	if f.flag == typeData {
+		e.kcp.Input(buf[fecHeaderSizePlus2:], true, false)
+		return
+	}
+	if f.flag != typeFEC {
+		return
+	}
+
+	recovers := e.fec.dec.decode(f)
+	for _, r := range recovers {
+		if len(r) < 2 { // must be larger than 2bytes
+			continue
+		}
+
+		sz := binary.LittleEndian.Uint16(r)
+		if int(sz) > len(r) || sz < 2 {
+			continue
+		}
+
+		e.kcp.Input(r[2:sz], false, false)
+	} // for
 }
