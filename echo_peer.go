@@ -12,7 +12,8 @@ type EchoPeer struct {
 	kcp *kcp.KCP
 
 	// FEC codec
-	fec *FecCodec
+	fec          *FecCodec
+	fecRecovered int // recovered packet count
 
 	outputToNet OutputCallback
 }
@@ -67,7 +68,9 @@ func (e *EchoPeer) Input(buf []byte) {
 			continue
 		}
 
-		e.kcp.Input(r[2:sz], false, false)
+		if ret := e.kcp.Input(r[2:sz], false, false); ret == 0 {
+			e.fecRecovered++
+		}
 	} // for
 }
 

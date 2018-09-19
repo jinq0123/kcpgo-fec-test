@@ -48,6 +48,7 @@ func (e *EchoTester) Run() {
 	fmt.Printf("%s mode(%d,%d,%d,%d%s) result (%dms):\n",
 		mode.name, mode.nodelay, mode.interval, mode.resend, mode.nc, fec, total)
 	fmt.Printf("avgrtt=%d e.maxrtt=%d\n", int(e.clt.sumrtt/uint32(e.clt.pongCount)), e.clt.maxrtt)
+	e.printFecRecoveredCount()
 	e.clt.SaveRtt()
 }
 
@@ -86,4 +87,11 @@ func (e *EchoTester) recvFromVNet() {
 		// Input to client's kcp/fec.
 		e.clt.Input(e.buffer[:hr])
 	}
+}
+
+func (e *EchoTester) printFecRecoveredCount() {
+	if !e.mode.fec {
+		return
+	}
+	fmt.Printf("FEC recovered: server=%d, client=%d\n", e.svr.fecRecovered, e.clt.fecRecovered)
 }
