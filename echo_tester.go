@@ -41,18 +41,7 @@ func (e *EchoTester) Run() {
 		time.Sleep(1 * time.Millisecond)
 		e.tickMs()
 	}
-
-	total := iclock() - start
-	mode := e.mode
-	var fec string
-	if mode.fec {
-		fec = ",fec"
-	}
-	fmt.Printf("%s mode(%d,%d,%d,%d%s) result (%dms):\n",
-		mode.name, mode.nodelay, mode.interval, mode.resend, mode.nc, fec, total)
-	fmt.Printf("avgrtt=%d e.maxrtt=%d\n", int(e.clt.sumrtt/uint32(e.clt.pongCount)), e.clt.maxrtt)
-	e.printFecRecoveredCount()
-	e.printBandWidthUsage()
+	e.printResult(start)
 	e.clt.SaveRtt()
 }
 
@@ -94,16 +83,24 @@ func (e *EchoTester) recvFromVNet() {
 	}
 }
 
-func (e *EchoTester) printFecRecoveredCount() {
-	if !e.mode.fec {
-		return
+func (e *EchoTester) printResult(start MsClock) {
+	total := iclock() - start
+	mode := e.mode
+	var fec string
+	if mode.fec {
+		fec = ",fec"
 	}
-	fmt.Printf("FEC recovered: server=%d, client=%d\n", e.svr.fecRecovered, e.clt.fecRecovered)
-}
+	fmt.Printf("%s mode(%d,%d,%d,%d%s) result (%dms):\n",
+		mode.name, mode.nodelay, mode.interval, mode.resend, mode.nc, fec, total)
 
-func (e *EchoTester) printBandWidthUsage() {
+	fmt.Printf("\tavgrtt=%d maxrtt=%d\n",
+		int(e.clt.sumrtt/uint32(e.clt.pongCount)), e.clt.maxrtt)
 	cltSendBytes := e.clt.SendBytes() // not 0
-	fmt.Printf("Band width usage: %d/%d = %0.1f%%\n",
+	fmt.Printf("\tBand width usage: %d/%d = %0.1f%%\n",
 		e.cltSendToNetBytes, cltSendBytes,
 		100.0*float32(e.cltSendToNetBytes)/float32(cltSendBytes))
+	if e.mode.fec {
+		fmt.Printf("\tFEC recovered: server=%d, client=%d\n",
+			e.svr.fecRecovered, e.clt.fecRecovered)
+	}
 }
