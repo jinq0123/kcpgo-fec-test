@@ -15,6 +15,9 @@ type EchoTester struct {
 	vnet *LatencySimulator
 
 	buffer []byte
+
+	// client kcp send to net
+	cltSendToNetBytes int
 }
 
 func NewEchoTester(mode Mode) *EchoTester {
@@ -49,6 +52,7 @@ func (e *EchoTester) Run() {
 		mode.name, mode.nodelay, mode.interval, mode.resend, mode.nc, fec, total)
 	fmt.Printf("avgrtt=%d e.maxrtt=%d\n", int(e.clt.sumrtt/uint32(e.clt.pongCount)), e.clt.maxrtt)
 	e.printFecRecoveredCount()
+	e.printBandWidthUsage()
 	e.clt.SaveRtt()
 }
 
@@ -60,6 +64,7 @@ func (e *EchoTester) tickMs() {
 }
 
 func (e *EchoTester) sendC2S(buf []byte, size int) {
+	e.cltSendToNetBytes += size
 	e.vnet.SendC2S(buf[:size])
 }
 
@@ -94,4 +99,11 @@ func (e *EchoTester) printFecRecoveredCount() {
 		return
 	}
 	fmt.Printf("FEC recovered: server=%d, client=%d\n", e.svr.fecRecovered, e.clt.fecRecovered)
+}
+
+func (e *EchoTester) printBandWidthUsage() {
+	cltSendBytes := e.clt.SendBytes() // not 0
+	fmt.Printf("Band width usage: %d/%d = %0.1f%%\n",
+		e.cltSendToNetBytes, cltSendBytes,
+		100.0*float32(e.cltSendToNetBytes)/float32(cltSendBytes))
 }

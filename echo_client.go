@@ -20,6 +20,8 @@ type EchoClient struct {
 
 	modeName string
 	aRtt     []int
+
+	sendBytes int
 }
 
 func NewEchoClient(mode Mode, output OutputCallback) *EchoClient {
@@ -51,7 +53,9 @@ func (e *EchoClient) tryToPing() {
 		e.pingIndex++
 		binary.Write(buf, binary.LittleEndian, uint32(current))
 		// 发送上层协议包
-		e.kcp.Send(buf.Bytes())
+		bytes := buf.Bytes()
+		e.kcp.Send(bytes)
+		e.sendBytes += len(bytes)
 	}
 }
 
@@ -109,4 +113,8 @@ func saveToFile(a []int, fileName string) {
 	for _, v := range a {
 		file.WriteString(fmt.Sprintf("%d\n", v))
 	}
+}
+
+func (e *EchoClient) SendBytes() int {
+	return e.sendBytes
 }
