@@ -23,7 +23,7 @@ func (e *EchoServer) TickMs() {
 func (e *EchoServer) echo() {
 	// kcpSvr 接收到任何包都返回回去
 	for {
-		buffer := make([]byte, 10)
+		buffer := make([]byte, 100+pingDataSize)
 		hr := int32(e.kcp.Recv(buffer))
 		// 没有收到包就退出
 		if hr < 0 {

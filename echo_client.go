@@ -42,6 +42,10 @@ func (e *EchoClient) TickMs() {
 }
 
 func (e *EchoClient) tryToPing() {
+	if e.pingIndex >= maxCount {
+		return
+	}
+
 	current := iclock()
 	if 0 == e.nextPingTime {
 		e.nextPingTime = current
@@ -52,7 +56,9 @@ func (e *EchoClient) tryToPing() {
 		binary.Write(buf, binary.LittleEndian, uint32(e.pingIndex))
 		e.pingIndex++
 		binary.Write(buf, binary.LittleEndian, uint32(current))
-		// 发送上层协议包
+		buf.Write(make([]byte, pingDataSize))
+
+		// Send ping packet: 4Bytes + 4Bytes + pingDataSize
 		bytes := buf.Bytes()
 		e.kcp.Send(bytes)
 		e.sendBytes += len(bytes)
@@ -63,7 +69,7 @@ func (e *EchoClient) recvPong() {
 	current := iclock()
 	// kcpClt收到Server的回射数据
 	for e.pongCount < maxCount {
-		buffer := make([]byte, 10)
+		buffer := make([]byte, 100+pingDataSize)
 		hr := int32(e.kcp.Recv(buffer))
 		buf := bytes.NewReader(buffer)
 		// 没有收到包就退出
