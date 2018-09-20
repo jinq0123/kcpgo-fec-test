@@ -14,7 +14,8 @@ kcpgo-fec-test && cd output && gnuplot --persist -e "plot 'normal_sorted.txt' wi
 ```
 Or run [run_and_plot.bat](run_and_plot.bat).
 
-Output example:
+Output example as following. x is the ping ID, y is sorted round-trip time in ms.
+
 ![output.png](output.png)
 
 Add more modes in `main.go`:
