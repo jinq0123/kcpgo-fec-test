@@ -12,4 +12,4 @@ Or:
 ```
 kcpgo-fec-test && cd output && gnuplot --persist -e "plot 'normal_sorted.txt' with lines, 'normal-fec_sorted.txt' with lines, 'fast_sorted.txt' with lines, 'fast-fec_sorted.txt' with lines" && cd ..
 ```
-Or run `run_and_plot.bat`.
+Or run [run_and_plot.bat](run_and_plot.bat).
